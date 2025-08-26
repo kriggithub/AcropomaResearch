@@ -1,0 +1,983 @@
+---
+title: "Fish Data Analysis"
+author: "Kurt Riggin"
+date: "10/2/2024"
+output:
+  html_document: default
+  pdf_document: default
+---
+```{r, include = F}
+setwd("/cloud/project/GhedottiVossResearch")
+fishdat2 <- read.csv("fishdat2.csv")
+fishdat1sum <- read.csv("fishdat1sum.csv")
+library(tidyverse)
+library(ggplot2)
+library(glmmTMB)
+library(multcomp)
+library(vegan)
+library(glue)
+library(scales)
+library(gt)
+```
+
+## Question 1: How do the two species differ in average standard length by season?
+
+First we can create a simple boxplot visual showing difference in Month, Species, and Standard Length with a cutoff line for Size Class:
+
+```{r, echo = F}
+SMSLBoxplotbw <- ggplot(fishdat2, aes(x = Species, y = SL, fill = Month)) +
+  geom_boxplot(alpha = 0.6) +
+  xlab("Species") +
+  ylab("Standard Length (mm)") +
+  geom_hline(aes(yintercept = 60, color = "Size Class"), linetype = "dashed") +
+  scale_color_manual(name = "", values = c("Size Class" = "black")) +
+  scale_fill_grey() +
+  theme_minimal() +
+  scale_x_discrete(labels = function(x) {
+    lapply(x, function(label) bquote(italic(.(label))))
+  }) +
+   theme(
+    axis.title = element_text(size = 20),       # axis title size
+    axis.text = element_text(size = 16),        # species title size
+    legend.text = element_text(size = 14),      # month label size
+    legend.title = element_text(size = 17)      # legend text size
+  )
+SMSLBoxplotbw
+
+
+SMSLBoxplotcol <- ggplot(fishdat2, aes(x = Species, y = SL, fill = Month)) +
+  geom_boxplot(alpha = 0.9) +
+  xlab("Species") +
+  ylab("Standard Length (mm)") +
+  geom_hline(aes(yintercept = 60, color = "Size Class"), linetype = "dashed") +
+  scale_color_manual(name = "", values = c("Size Class" = "black")) +
+  theme_minimal() +
+  scale_fill_manual(values = c("Feb" = "royalblue1", "May" = "orange")) +
+  scale_x_discrete(labels = function(x) {
+    lapply(x, function(label) bquote(italic(.(label))))
+  }) +
+   theme(
+    axis.title = element_text(size = 20),       # axis title size
+    axis.text = element_text(size = 16),        # species title size
+    legend.text = element_text(size = 14),      # month label size
+    legend.title = element_text(size = 17)      # legend text size
+  )
+#SMSLBoxplotcol
+
+
+
+#ggsave(filename = "SpeciesMonthSLBoxplotbw.jpg", plot = SMSLBoxplotbw, width = 8, height = 6, dpi = 300)
+#ggsave(filename = "SpeciesMonthSLBoxplotcol.jpg", plot = SMSLBoxplotcol, width = 8, height = 6, dpi = 300)
+
+```
+
+
+```{r, include=F}
+distplot <- ggplot(fishdat2, aes(x = SL, fill = Species)) +
+  geom_density(alpha = 0.4) +
+  theme_minimal()
+distplotlog <- ggplot(fishdat2, aes(x = log(SL), fill = Species)) +
+  geom_density(alpha = 0.4) +
+  theme_minimal()
+distplot
+distplotlog
+```
+
+
+After log transforming our Standard Length values to normalize them, we can create various linear models based on Species and Month w/ interactions, either predicting standard length or size class and also including a random effect of the "Master Jar" each fish came from. Additionally, after computing AIC values for each model, we can determine the "best" one. 
+
+This leads us to our main linear model predicting log(Standard Length) with Species and Month, including interactions and random effect of master jars. 
+
+
+
+
+
+```{r, include = F}
+#(1) For a linear model predicting log(SL) with Species, Month and interactions:
+SMSLInlmModel <- lm(log(SL) ~ Month + Species + Month:Species, data  = fishdat2)
+summary(SMSLInlmModel)
+AIC(SMSLInlmModel)
+```
+
+
+
+```{r, include = F}
+#(2) For a linear model predicting log(SL) with Species and Month not including interactions:
+SMSLlmModel <- lm(log(SL) ~ Month + Species, data  = fishdat2)
+summary(SMSLlmModel)
+AIC(SMSLlmModel)
+```
+
+
+
+```{r, echo = F}
+#(3) For a linear model predicting log(SL) with Species and Month, including interactions and random effect of master jars: (WILL BE MAIN LINEAR MODEL FOR ANALYSIS)
+SMSLInRelmModel <- glmmTMB(log(SL) ~ Species + Month + Species:Month + (1|MJar), data = fishdat2, family = gaussian(link = "identity"))
+summary(SMSLInRelmModel)
+#AIC(SMSLInRelmModel)
+```
+
+We can see that fish in May are predicted to be significantly larger (p = 0.000808) as well as A. Japonicum (p = 0.001179).
+
+
+```{r, include = F}
+#(4) For a generalized linear model predicting SClass with Species and Month including interactions:
+SMSCInglmModel <- glm(SClass ~ Species + Month + Species:Month, data = fishdat2, family = binomial(link = 'logit'))
+summary(SMSCInglmModel)
+AIC(SMSCInglmModel)
+```
+
+
+
+
+```{r, include = F}
+#(5) For a generalized linear model predicting SClass with Species and Month including interactions:
+SMSCInReglmModel <- glmmTMB(SClass ~ Species + Month + Species:Month + (1|MJar), data = fishdat2, family = binomial(link = 'logit'))
+summary(SMSCInReglmModel)
+AIC(SMSCInReglmModel)
+```
+
+
+
+
+```{r, include = F}
+#Now, to summarize all AIC values:
+#(Key (in order): S = Species, M = Month, SL/SC = log(SL) or SClass, In = Interaction, Re = Random effect, lm/glm = generalized/not)
+AIC(SMSLInlmModel)
+AIC(SMSLlmModel)
+AIC(SMSLInRelmModel)
+AIC(SMSCInglmModel)
+AIC(SMSCInReglmModel)
+```
+
+
+
+
+
+
+
+## Question 2: Does a fish having any stomach content have bias in size, species or month?
+
+We now can look at whether or not size, species, month and their interactions had an effect on if a fish had any stomach contents at all.
+
+
+```{r}
+#(1) For a generalized linear model predicting Content with Standard Length, Species and Month including interactions:
+ContVarglmModel <- glmmTMB(Content ~ SL + Species + Month + SL:Species + SL:Month + Species:Month + SL:Species:Month + (1|MJar), data = fishdat2, family = binomial(link = 'logit'))
+#summary(ContVarglmModel)
+AIC(ContVarglmModel)
+```
+
+
+
+```{r, include = F}
+#AIC increased by 2 after accounting for random effect of MJar
+model1 <- glmmTMB(Content ~ 1 + (1|MJar), data = fishdat2, family = binomial(link = 'logit'))
+summary(model1)
+invlogit2 <- (exp(-0.3475))/(1+(exp(-0.3475)))
+invlogit2
+```
+
+
+```{r, include = F}
+ContVarglmModel1 <- glmmTMB(Content ~ as.factor(SClass) + Species + Month + as.factor(SClass):Species + as.factor(SClass):Month + Species:Month + as.factor(SClass):Species:Month + (1|MJar), data = fishdat2, family = binomial(link = 'logit'))
+summary(ContVarglmModel1)
+AIC(ContVarglmModel1)
+#AIC increased by 2 after accounting for random effect of MJar
+#ContglmModel2 <- glm(Content ~ Month, data = fishdat2, family = binomial(link = 'logit'))
+#summary(ContglmModel2)
+```
+
+
+
+
+
+
+
+
+```{r}
+#(2) For a generalized linear model predicting Content based on only intercept
+ContglmModel <- glm(Content ~ 1, data = fishdat2, family = binomial(link = 'logit'))
+
+AIC(ContglmModel)
+
+```
+
+After running several models to predict the presence of any stomach content in a fish based on size, species, and month, we find that there is no significant effect of any variable.
+
+```{r, include = F}
+#We can see that the AIC score of the models predicting content without variables is actually lower, and by computation of our inverse logit function and comparison with proportion of which fish have content or don't, we can see that there isn't a difference.
+AIC(ContVarglmModel)
+AIC(ContglmModel)
+invlogit <- (exp(-0.2843))/(1+(exp(-0.2843)))
+contprop <- sum(fishdat2$Content)/170
+invlogit
+contprop
+```
+
+
+
+## Question 3: Now using our linear model to predict log(Standard length) from above, can we create 95% confidence intervals for the standard length of each combination of species and month?
+
+General linear hypothesis tests of log(SL) of each combination of species and month as predicted from our model:
+
+
+```{r, echo = F}
+hanfeb <- c(1,0,0,0)
+hanmay <- c(1,0,1,0)
+japfeb <- c(1,1,0,0)
+japmay <- c(1,1,1,1)
+
+K_fish <- rbind(hanfeb, hanmay, japfeb, japmay)
+fish.glht <- glht(SMSLInRelmModel, linfct = K_fish)
+ci <- confint(fish.glht, calpha=univariate_calpha())
+
+
+summary(fish.glht, test = adjusted(type = "none"))
+
+```
+Here are the exponentiated 95% CIs for Standard Length of each combination of species and month as predicted from our model.
+
+```{r, echo = F}
+
+exp_ci  <- as.data.frame(exp(ci$confint))
+exp_ci
+
+```
+
+
+## Question 4: Can we perform a PERMANOVA to determine signficant relationships with diet composition and ordinate the data using a Principal Coordinates Analysis?
+
+First, predicting stomach composition by biovolume:
+
+
+```{r, echo = F}
+#Bray Curtis Dissimilarity, PermANOVA, PCoA, NMDS
+#fishBCdat is species trait data
+#BC dissimilarity/PermANOVA
+fishBCdat <- dplyr::filter(fishdat2, Content != 0)
+
+fishBCdat <- fishBCdat %>% 
+  mutate(Individual = row_number())
+  
+  
+fishBCdat2 <- fishBCdat %>% dplyr::select(animal:mollusk) %>% sqrt()
+
+
+BCmat <- vegdist(fishBCdat2)
+
+
+permanova <- adonis2(BCmat ~ SL + Species + Month + SL:Species + SL:Month + Species:Month + SL:Species:Month, data = fishBCdat, by = "terms")
+
+permanova2 <- adonis2(BCmat ~ Species + Month + SClass + Species:Month + SClass:Species + SClass:Month  + SClass:Species:Month, data = fishBCdat, by = "terms")
+
+print(permanova2)
+```
+
+Second, predicting stomach composition by frequency of occurrence (whether or not that type of content was present represented as either 0 or 1):
+
+
+
+```{r, echo = F}
+fishBCdat <- fishBCdat %>% mutate(animalcount = ifelse(animal > 0, 1, 0))
+fishBCdat <- fishBCdat %>% mutate(crustaceancount = ifelse(crustacean > 0, 1, 0))
+fishBCdat <- fishBCdat %>% mutate(fishcount = ifelse(fish > 0, 1, 0))
+fishBCdat <- fishBCdat %>% mutate(molluskcount = ifelse(mollusk > 0, 1, 0))
+  
+  
+fishBCdat3 <- fishBCdat %>% dplyr::select(animalcount:molluskcount) %>% sqrt()
+
+
+BCmat2 <- vegdist(fishBCdat3)
+
+
+permanovafreq <- adonis2(BCmat2 ~ SL + Species + Month + SL:Species + SL:Month + Species:Month + SL:Species:Month, data = fishBCdat, by = "terms")
+
+permanovafreq2 <- adonis2(BCmat2 ~ Species + Month + SClass + Species:Month + SClass:Species + SClass:Month + SClass:Species:Month, data = fishBCdat, by = "terms")
+
+
+
+permanovafreq2
+
+```
+
+
+From these calculated PermANOVAs, we can see that after predicting stomach composition by biovolume, ~18% of the variation is accounted for by species and interaction with month, even after accounting for the variation in size classes. For the PermANOVA predicting stomach composition by frequency of occurrence, this variation by species and interaction with month jumps up to ~22% after accounting for variation in size classes.
+
+
+
+Now, after ordinating the data with a principal coordinates analysis, we see that because each collected fish tended to only have one kind of category of stomach content, our subsequent graphical representation is heavily drawn towards the axis, which will not be used in further analysis.
+
+```{r, echo = F}
+pcoa <- wcmdscale(BCmat, eig = T)
+#print(pcoa)
+#ordiplot(pcoa, display = 'sites', type = 'text')
+
+pcoa_df <- data.frame(pcoa$points)
+pcoa_df$Species <- factor(fishBCdat$Species)
+pcoa_df$Month <- factor(fishBCdat$Month)
+
+
+variation <- pcoa$eig / sum(pcoa$eig) * 100
+#variation[1] #50.83807
+#variation[2] #28.29742
+#variation[3] #10.92235
+
+
+rounded_var <- format(round(variation[1:2], digits = 2), nsmall = 1, trim = T)
+
+labs <- c(glue("PCO1 ({rounded_var[1]}% of total variation)"),
+          glue("PCO2 ({rounded_var[2]}% of total variation)"))
+
+#ggplot(data = pcoa_df,
+#aes(x = Dim1, y = Dim2, color = Species)) +
+#geom_point(aes(shape = Month)) +
+#labs(x=labs[1], y= labs[2]) +
+#theme_minimal()
+
+
+en <- envfit(ord = pcoa, env = fishBCdat2)
+en_coord_cont <- as.data.frame(scores(en, "vectors")) * ordiArrowMul(en)
+
+
+
+ggplot(data = pcoa_df,
+aes(x = Dim1, y = Dim2, color = Species)) +
+geom_segment(aes(x = 0, y = 0, xend = Dim1, yend = Dim2), data = en_coord_cont, color = "black") +
+geom_text(data = en_coord_cont, aes(x = Dim1, y = Dim2), label = row.names(en_coord_cont), color = "black", vjust = -1) + 
+geom_point(aes(shape = Month)) +
+geom_jitter(height = 0.1, width = 0.05) +
+labs(x=labs[1], y= labs[2]) +
+theme_minimal()
+
+```
+
+
+
+```{r, include=F}
+#set.seed(10042003)
+#nmds <- metaMDS(BCmat)
+#nmds
+#plot(nmds)
+#stressplot (nmds)
+
+
+#fishBCdat$Individual <- as.character(fishBCdat$Individual)
+
+#nmds_p <- scores(nmds) %>% as_tibble(rownames="Individual")
+#nmds_pmerge <- nmds_p %>% 
+  #left_join(fishBCdat %>% select(Individual, Species, Month), by = "Individual")
+#nmds_pmerge
+
+
+
+#en2 <- envfit(ord = nmds, env = fishBCdat2)
+#en_coord_cont2 <- as.data.frame(scores(en2, "vectors")) * ordiArrowMul(en2)
+
+
+#ggplot(data = nmds_pmerge,
+#aes(x = NMDS1, y = NMDS2, color = Species)) +
+#geom_point(aes(shape = Month)) +
+#theme_minimal()
+
+
+
+#ggplot(data = nmds_pmerge,
+#aes(x = NMDS1, y = NMDS2, color = Species)) +
+#geom_segment(aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2), data = en_coord_cont2, color = "black") +
+#geom_text(data = en_coord_cont2, aes(x = NMDS1, y = NMDS2), label = row.names(en_coord_cont), color = "black", vjust = -1) + 
+#geom_point(aes(shape = Month)) +
+#theme_minimal()
+```
+
+
+
+
+
+
+
+
+
+
+
+## Question 5: Can we create a visual representation of diet composition by both biovolume and frequency of occurance based on species month interactions?
+
+
+
+
+```{r, echo = F}
+
+fishbardat <- filter(fishdat1sum, Vol != 0)
+fishbardat <- fishbardat %>% mutate(Count = ifelse(Vol > 0, 1, 0))
+fishbardat <- fishbardat %>% 
+  mutate(
+    SClass = ifelse(SL >= 60, "Large", "Small")
+  )
+
+fishbardat <- fishbardat %>%
+  mutate(interaction_col = factor(interaction(Species, Month),
+                                  levels = c("Acropoma hanedai.Feb", "Acropoma hanedai.May", "Acropoma japonicum.Feb", "Acropoma japonicum.May")))
+
+fishbardat$Category[fishbardat$Category=="animal"] <- "unident. animal"
+fishbardat$Category[fishbardat$Category=="fish"] <- "teleost"
+
+
+fishbardat$Category <- factor(fishbardat$Category, levels = c("unident. animal", "mollusk", "crustacean", "teleost"))
+
+
+barlabels <- c(
+  "Acropoma hanedai.Feb" = "Han Feb",
+  "Acropoma hanedai.May" = "Han May",
+  "Acropoma japonicum.Feb" = "Jap Feb",
+  "Acropoma japonicum.May" = "Jap May"
+)
+
+
+poccurscl <- ggplot(fishbardat, aes(fill = Category, y = Count, x = SClass)) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_fill_grey() +
+  scale_y_continuous(labels = label_percent(scale = 100)) +
+  labs(x = "Size Class", y = "Percentage of Occurence", fill = "Category") +
+  theme_bw()
+#poccurscl
+
+
+
+
+pvolscl <- ggplot(fishbardat, aes(fill = Category, y = Vol, x = SClass)) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_fill_grey() +
+  scale_y_continuous(labels = label_percent(scale = 100)) +
+  labs(x = "Size Class", y = "Percentage of Volume", fill = "Category") +
+  theme_bw()
+#pvolscl
+
+
+
+poccurspmcol <- ggplot(fishbardat, aes(fill = Category, y = Count, x = interaction_col)) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_x_discrete(labels = barlabels) + 
+  scale_y_continuous(labels = label_percent(scale = 100)) +
+  scale_fill_manual(
+    values = c(
+      "unident. animal" = "gray10",  # Lightest shade
+      "mollusk" = "yellow",  # Medium shade
+      "crustacean" = "tomato3",   # Darkest shade
+      "teleost" = "purple3"
+    )
+  ) +
+  labs(x = "Species and Month", y = "Percentage of Occurence", fill = "Category") +
+  theme_bw()+
+   theme(
+    axis.title = element_text(size = 20),       # axis title size
+    axis.text = element_text(size = 16),        # species title size
+    legend.text = element_text(size = 14),      # month label size
+    legend.title = element_text(size = 17)      # legend text size
+  )
+#poccurspmcol
+
+
+poccurspm <- ggplot(fishbardat, aes(fill = Category, y = Count, x = interaction_col)) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_x_discrete(labels = barlabels) + 
+  scale_y_continuous(labels = label_percent(scale = 100)) +
+  scale_fill_manual(
+    values = c(
+      "unident. animal" = "gray10",  # Lightest shade
+      "mollusk" = "gray27",  # Medium shade
+      "crustacean" = "gray50",   # Darkest shade
+      "teleost" = "gray80"
+    )
+  ) +
+  labs(x = "Species and Month", y = "Percentage of Occurence", fill = "Category") +
+  theme_bw() +
+   theme(
+    axis.title = element_text(size = 20),       # axis title size
+    axis.text = element_text(size = 16),        # species title size
+    legend.text = element_text(size = 14),      # month label size
+    legend.title = element_text(size = 17)      # legend text size
+  )
+poccurspm
+
+
+pvolspm <- ggplot(fishbardat, aes(fill = Category, y = Vol, x = interaction_col)) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_x_discrete(labels = barlabels) + 
+  scale_y_continuous(labels = label_percent(scale = 100)) +
+  labs(x = "Species and Month", y = "Percentage of Volume", fill = "Category") +
+  theme_bw() +
+  scale_fill_manual(
+    values = c(
+      "unident. animal" = "gray10",  # Lightest shade
+      "mollusk" = "gray27",  # Medium shade
+      "crustacean" = "gray50",   # Darkest shade
+      "teleost" = "gray80"
+    )
+  ) +
+  theme_bw() +
+   theme(
+    axis.title = element_text(size = 20),       # axis title size
+    axis.text = element_text(size = 16),        # species title size
+    legend.text = element_text(size = 14),      # month label size
+    legend.title = element_text(size = 17)      # legend text size
+  )
+pvolspm
+
+
+pvolspmcol <- ggplot(fishbardat, aes(fill = Category, y = Vol, x = interaction_col)) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_x_discrete(labels = barlabels) + 
+  scale_y_continuous(labels = label_percent(scale = 100)) +
+  labs(x = "Species and Month", y = "Percentage of Volume", fill = "Category") +
+  theme_bw() + 
+  scale_fill_manual(
+    values = c(
+      "unident. animal" = "gray10",  # Lightest shade
+      "mollusk" = "yellow",  # Medium shade
+      "crustacean" = "tomato3",   # Darkest shade
+      "teleost" = "purple3"
+    )
+  ) +
+  theme_bw()+
+   theme(
+    axis.title = element_text(size = 20),       # axis title size
+    axis.text = element_text(size = 16),        # species title size
+    legend.text = element_text(size = 14),      # month label size
+    legend.title = element_text(size = 17)      # legend text size
+  )
+#pvolspmcol
+
+
+
+#ggsave(filename = "SpmOccurBarbw.jpg", plot = poccurspm, width = 8, height = 6, dpi = 300)
+#ggsave(filename = "SpmOccurBarcol.jpg", plot = poccurspmcol, width = 8, height = 6, dpi = 300)
+#ggsave(filename = "SpmVolBarbw.jpg", plot = pvolspm, width = 8, height = 6, dpi = 300)
+#ggsave(filename = "SpmVolBarcol.jpg", plot = pvolspmcol, width = 8, height = 6, dpi = 300)
+
+```
+
+
+
+
+## Question 6: Can we predict frequnecy of occurance of specific types of stomach content (with focus on crustaceans and fish) using a generalized linear mixed model?
+
+For the model predicting presence of crustaceans (using A. japonicum and May as basis):
+
+
+```{r, echo = F}
+
+fishdat2 <- fishdat2 %>% mutate(animalcount = ifelse(animal > 0, 1, 0))
+fishdat2 <- fishdat2 %>% mutate(crustaceancount = ifelse(crustacean > 0, 1, 0))
+fishdat2 <- fishdat2 %>% mutate(fishcount = ifelse(fish > 0, 1, 0))
+fishdat2 <- fishdat2 %>% mutate(molluskcount = ifelse(mollusk > 0, 1, 0))
+
+
+
+animalglm <- glmmTMB(animalcount ~ Species + Month + Species:Month + log(SL), data = fishdat2, family = binomial(link = 'logit'))
+molluskglm <- glmmTMB(molluskcount ~ Species + Month + Species:Month + log(SL), data = fishdat2, family = binomial(link = 'logit'))
+crustaceanglm <- glmmTMB(crustaceancount ~ Species + Month + Species:Month + log(SL), data = fishdat2, family = binomial(link = 'logit'))
+fishglm <- glmmTMB(fishcount ~ Species + Month + Species:Month + log(SL), data = fishdat2, family = binomial(link = 'logit'))
+
+
+crustaceanglm2 <- glmmTMB(crustaceancount ~ Species + Month + Species:Month + SClass, data = fishdat2, family = binomial(link = 'logit'))
+fishglm2 <- glmmTMB(fishcount ~ Species + Month + Species:Month + SClass, data = fishdat2, family = binomial(link = 'logit'))
+
+# + Species:log(SL) + Month:log(SL) + Species:Month:log(SL)
+# + Species:SClass + Month:SClass + Species:Month:SClass
+#summary(animalglm)
+#summary(molluskglm)
+#summary(crustaceanglm)
+#summary(fishglm)
+summary(crustaceanglm2)
+
+
+fishdat2a <- fishdat2
+fishdat2a$Species <- as.factor(fishdat2a$Species)
+fishdat2a$Species <- relevel(fishdat2a$Species, ref = "Acropoma japonicum")
+fishdat2a$Month <- as.factor(fishdat2a$Month)
+fishdat2a$Month <- relevel(fishdat2a$Month, ref = "Feb")
+  
+
+
+crustaceanglm3 <- glmmTMB(crustaceancount ~ Species + Month + Species:Month + SClass, data = fishdat2a, family = binomial(link = 'logit'))
+fishglm3 <- glmmTMB(fishcount ~ Species + Month + Species:Month + SClass, data = fishdat2a, family = binomial(link = 'logit'))
+
+
+```
+
+We can see that this specific combination has a significant positive interaction (estimate = 3.1348) with odds of crustaceans (p = 0.000767). Still predicting the presence of crustaceans (using A. hanedai and May as basis instead):
+
+
+
+```{r, echo = F}
+#summary(crustaceanglm3)
+```
+For A.hanedai and May predicting crustaceans, the significance does not change (p = 0.000767), but the direction of the interaction does (estimate = -3.1347).
+
+
+
+
+
+
+
+
+For the model predicting presence of fish (using A. japonicum and May as basis):
+
+
+```{r, echo = F}
+summary(fishglm2)
+```
+
+We can see that this specific combination has a significant negative interaction (estimate = -3.411) with odds of fish (p = 0.00681). Still predicting the presence of fish (using A. hanedai and May as basis instead):
+
+```{r, echo = F}
+#summary(fishglm3)
+```
+For A.hanedai and May predicting fish, the significance does not change (p = 0.00681), but the direction of the interaction does (estimate = 3.4107). We can see similar results if we switched months instead of species as well.
+
+
+
+These models indicate that the interaction between species and month has a significant impact on whether or not a fish will have crustaceans or fish, and in specific with opposite effects.
+
+
+## Additional Graphs/Information
+
+```{r, include = F}
+#proportion of gut content based on original fish
+
+#fishprops <- fishdat3 %>% 
+  #group_by(SM) %>%
+  #summarise(
+    #proportion = mean(Content == 1)
+  #)
+#view(fishprops)
+#hanfeb = 0.3478261 w/ 46 obs
+#hanmay = 0.3111111 w/ 45 obs
+#japfeb = 0.5370370 w/ 54 obs
+#japmay = 0.5600000 w/ 25 obs
+```
+
+
+
+
+
+Table of confidence intervals for both frequency (prop test) and biovolume (t-test)
+
+
+For Frequency:
+
+
+```{r, echo = F}
+fishdat3 <- dplyr::select(fishdat2, Species, Month, animal:molluskcount)
+
+fishdat3 <- unite(fishdat3, SM, Species, Month)
+#table(fishdat3$SM)
+
+
+crustaceantable <- fishdat3 %>% 
+  group_by(SM) %>% 
+  summarise(
+    n = n(),
+    successes = sum(crustaceancount == 1),
+    estimate = mean(crustaceancount == 1),
+    ci_low = prop.test(successes, n)$conf.int[1],
+    ci_high = prop.test(successes, n)$conf.int[2]
+  ) %>% 
+  dplyr::select(SM, estimate, ci_low, ci_high) %>% 
+  mutate(variable = "Crustacean Count")
+
+#print(crustaceantable)
+
+
+fishtable <- fishdat3 %>% 
+  group_by(SM) %>% 
+  summarise(
+    n = n(),
+    successes = sum(fishcount == 1),
+    estimate = mean(fishcount == 1),
+    ci_low = prop.test(successes, n)$conf.int[1],
+    ci_high = prop.test(successes, n)$conf.int[2]
+  ) %>% 
+  dplyr::select(SM, estimate, ci_low, ci_high) %>% 
+  mutate(variable = "Fish Count")
+
+
+#print(fishtable)
+
+
+
+
+
+combinedtable <- bind_rows(crustaceantable, fishtable) %>%
+  pivot_wider(
+    names_from = variable,
+    values_from = c(estimate, ci_low, ci_high),
+    names_glue = "{variable}_{.value}"
+  ) %>%
+  arrange(SM)
+
+# Create the final table with gt
+finaltable <- combinedtable %>%
+  gt() %>%
+  tab_header(
+    title = "Proportion of Prescence Confidence Intervals",
+    subtitle = "Analysis for Crustaceans and Fish"
+  ) %>%
+  cols_label(
+    SM = "Species and Month",
+    `Crustacean Count_estimate` = "Estimate",
+    `Crustacean Count_ci_low` = "CI Lower",
+    `Crustacean Count_ci_high` = "CI Upper",
+    `Fish Count_estimate` = "Estimate",
+    `Fish Count_ci_low` = "CI Lower",
+    `Fish Count_ci_high` = "CI Upper",
+  ) %>%
+  tab_spanner(
+    label = "Crustacean Count",
+    columns = starts_with("Crustacean Count")
+  ) %>%
+  tab_spanner(
+    label = "Fish Count",
+    columns = starts_with("Fish Count")
+  ) %>%
+  fmt_number(
+    columns = everything(),
+    decimals = 5
+  ) %>%
+  opt_table_outline() %>%
+  opt_align_table_header(align = "center")
+
+
+finaltable
+
+```
+
+For Biovolume:
+
+
+```{r, echo = F}
+crustaceantable2 <- fishdat3 %>% 
+  group_by(SM) %>% 
+  summarise(
+    n = n(),
+    estimate = mean(crustacean, na.rm = T),
+    ci_low = t.test(crustacean)$conf.int[1],
+    ci_high = t.test(crustacean)$conf.int[2],
+  ) %>% 
+  dplyr::select(SM, estimate, ci_low, ci_high) %>% 
+  mutate(variable = "Crustacean Volume")
+
+#print(crustaceantable2)
+
+
+fishtable2 <- fishdat3 %>% 
+  group_by(SM) %>% 
+  summarise(
+    n = n(),
+    estimate = mean(fish, na.rm = T),
+    ci_low = t.test(fish)$conf.int[1],
+    ci_high = t.test(fish)$conf.int[2]
+  ) %>% 
+  dplyr::select(SM, estimate, ci_low, ci_high) %>% 
+  mutate(variable = "Fish Volume")
+
+
+
+combinedtable2 <- bind_rows(crustaceantable2, fishtable2) %>%
+  pivot_wider(
+    names_from = variable,
+    values_from = c(estimate, ci_low, ci_high),
+    names_glue = "{variable}_{.value}"
+  ) %>%
+  arrange(SM)
+
+# Create the final table with gt
+finaltable2 <- combinedtable2 %>%
+  gt() %>%
+  tab_header(
+    title = "Biovolume Confidence Intervals",
+    subtitle = "Analysis for Crustaceans and Fish"
+  ) %>%
+  cols_label(
+    SM = "Species and Month",
+    `Crustacean Volume_estimate` = "Estimate",
+    `Crustacean Volume_ci_low` = "CI Lower",
+    `Crustacean Volume_ci_high` = "CI Upper",
+    `Fish Volume_estimate` = "Estimate",
+    `Fish Volume_ci_low` = "CI Lower",
+    `Fish Volume_ci_high` = "CI Upper"
+  ) %>%
+  tab_spanner(
+    label = "Crustacean Volume",
+    columns = starts_with("Crustacean Volume")
+  ) %>%
+  tab_spanner(
+    label = "Fish Volume",
+    columns = starts_with("Fish Volume")
+  ) %>%
+  fmt_number(
+    columns = everything(),
+    decimals = 5
+  ) %>%
+  opt_table_outline() %>%
+  opt_align_table_header(align = "center")
+
+# Print GT table
+finaltable2
+
+```
+
+
+
+
+
+
+```{r, echo = F}
+
+#using crustaceanglm2
+
+crustocc.hanfeb <- c(1,0,0,0,0)
+crustocc.hanmay <- c(1,0,1,0,0)
+crustocc.japfeb <- c(1,1,0,0,0)
+crustocc.japmay <- c(1,1,1,0,1)
+
+
+#K_crust <- rbind(crust.hanfeb, crust.hanmay, crust.japfeb, crust.japmay)
+#crust.glht <- glht(crustaceanglm2, linfct = K_crust)
+#summary(crust.glht, test = adjusted(type = "none"))
+
+
+
+crustoccfeb <- crustocc.hanfeb - crustocc.japfeb
+crustoccmay <- crustocc.hanmay - crustocc.japmay
+crustocchan <- crustocc.hanfeb - crustocc.hanmay
+crustoccjap <- crustocc.japfeb - crustocc.japmay
+crustocchfjm <- crustocc.hanfeb - crustocc.japmay
+crustocchmjf <- crustocc.hanmay - crustocc.japfeb
+
+
+
+
+K_crustocc <- rbind(crustoccfeb, crustoccmay, crustocchan, crustoccjap, crustocchfjm, crustocchmjf)
+crustocc.glht <- glht(crustaceanglm2, linfct = K_crustocc)
+summary(crustocc.glht, test = adjusted(type = "none"))
+
+```
+
+
+
+
+
+```{r, echo = F}
+
+#using fishglm2
+
+fishocc.hanfeb <- c(1,0,0,0,0)
+fishocc.hanmay <- c(1,0,1,0,0)
+fishocc.japfeb <- c(1,1,0,0,0)
+fishocc.japmay <- c(1,1,1,0,1)
+
+
+#K_fish2 <- rbind(fish.hanfeb, fish.hanmay, fish.japfeb, fish.japmay)
+#fish2.glht <- glht(fishglm2, linfct = K_fish2)
+#summary(fish2.glht, test = adjusted(type = "none"))
+
+
+fishoccfeb <- fishocc.hanfeb - fishocc.japfeb
+fishoccmay <- fishocc.hanmay - fishocc.japmay
+fishocchan <- fishocc.hanfeb - fishocc.hanmay
+fishoccjap <- fishocc.japfeb - fishocc.japmay
+fishocchfjm <- fishocc.hanfeb - fishocc.japmay
+fishocchmjf <- fishocc.hanmay - fishocc.japfeb
+
+
+
+
+K_fishocc <- rbind(fishoccfeb, fishoccmay, fishocchan, fishoccjap, fishocchfjm, fishocchmjf)
+fishocc.glht <- glht(fishglm2, linfct = K_fishocc)
+summary(fishocc.glht, test = adjusted(type = "none"))
+
+
+
+
+
+
+
+
+```
+
+
+```{r}
+
+
+crustaceanvolglm <- glmmTMB(crustacean ~ Species + Month + Species:Month + SClass, data = fishdat2, family = gaussian(link = "identity"))
+fishvolglm <- glmmTMB(fish ~ Species + Month + Species:Month + SClass, data = fishdat2, family = gaussian(link = "identity"))
+
+
+#summary(crustaceanvolglm)
+summary(fishvolglm)
+
+```
+
+```{r}
+#using crustaceanvolglm
+
+crustvol.hanfeb <- c(1,0,0,0,0)
+crustvol.hanmay <- c(1,0,1,0,0)
+crustvol.japfeb <- c(1,1,0,0,0)
+crustvol.japmay <- c(1,1,1,0,1)
+
+
+#K_crust <- rbind(crust.hanfeb, crust.hanmay, crust.japfeb, crust.japmay)
+#crust.glht <- glht(crustaceanglm2, linfct = K_crust)
+#summary(crust.glht, test = adjusted(type = "none"))
+
+
+
+crustvolfeb <- crustvol.hanfeb - crustvol.japfeb
+crustvolmay <- crustvol.hanmay - crustvol.japmay
+crustvolhan <- crustvol.hanfeb - crustvol.hanmay
+crustvoljap <- crustvol.japfeb - crustvol.japmay
+crustvolhfjm <- crustvol.hanfeb - crustvol.japmay
+crustvolhmjf <- crustvol.hanmay - crustvol.japfeb
+
+
+
+
+K_crustvol <- rbind(crustvolfeb, crustvolmay, crustvolhan, crustvoljap, crustvolhfjm, crustvolhmjf)
+crustvol.glht <- glht(crustaceanvolglm, linfct = K_crustvol)
+summary(crustvol.glht, test = adjusted(type = "none"))
+
+```
+
+```{r}
+#using fishvolglm
+
+fishvol.hanfeb <- c(1,0,0,0,0)
+fishvol.hanmay <- c(1,0,1,0,0)
+fishvol.japfeb <- c(1,1,0,0,0)
+fishvol.japmay <- c(1,1,1,0,1)
+
+
+#K_crust <- rbind(crust.hanfeb, crust.hanmay, crust.japfeb, crust.japmay)
+#crust.glht <- glht(crustaceanglm2, linfct = K_crust)
+#summary(crust.glht, test = adjusted(type = "none"))
+
+
+
+fishvolfeb <- fishvol.hanfeb - fishvol.japfeb
+fishvolmay <- fishvol.hanmay - fishvol.japmay
+fishvolhan <- fishvol.hanfeb - fishvol.hanmay
+fishvoljap <- fishvol.japfeb - fishvol.japmay
+fishvolhfjm <- fishvol.hanfeb - fishvol.japmay
+fishvolhmjf <- fishvol.hanmay - fishvol.japfeb
+
+
+
+K_fishvol <- rbind(fishvolfeb, fishvolmay, fishvolhan, fishvoljap, fishvolhfjm, fishvolhmjf)
+fishvol.glht <- glht(fishvolglm, linfct = K_fishvol)
+summary(fishvol.glht, test = adjusted(type = "none"))
+
+```
+
+
