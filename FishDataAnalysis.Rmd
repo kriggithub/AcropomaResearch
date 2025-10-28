@@ -1357,6 +1357,7 @@ allCountsTable <- tableGrob(allCountsTable_wide)
 
 ```{r}
 library(vegan)
+library(dplyr)
 
 fishCountData <- read.csv("fishdat2.csv")
 fishCountData <- fishCountData %>% mutate(animalcount = ifelse(animal > 0, 1, 0))
@@ -1364,19 +1365,72 @@ fishCountData <- fishCountData %>% mutate(crustaceancount = ifelse(crustacean > 
 fishCountData <- fishCountData %>% mutate(fishcount = ifelse(fish > 0, 1, 0))
 fishCountData <- fishCountData %>% mutate(molluskcount = ifelse(mollusk > 0, 1, 0))
 
-accumdata <- fishCountData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
+hanFebData <- fishCountData %>% filter(Species == "Acropoma hanedai" & Month == "Feb")
+hanMayData <- fishCountData %>% filter(Species == "Acropoma hanedai" & Month == "May")
+japFebData <- fishCountData %>% filter(Species == "Acropoma japonicum" & Month == "Feb")
+japMayData <- fishCountData %>% filter(Species == "Acropoma japonicum" & Month == "May")
 
-accum <- specaccum(accumdata, method = "random")
+hanFebAccumData <- hanFebData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
+hanMayAccumData <- hanMayData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
+japFebAccumData <- japFebData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
+japMayAccumData <- japMayData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
+allAccumData <- fishCountData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
 
+hanFebAccum <- specaccum(hanFebAccumData, method = "random")
+hanMayAccum <- specaccum(hanMayAccumData, method = "random")
+japFebAccum <- specaccum(japFebAccumData, method = "random")
+japMayAccum <- specaccum(japMayAccumData, method = "random")
+allAccum <- specaccum(allAccumData, method = "random")
 
-plot(accum,
+plot(hanFebAccum,
      ci.type = "poly",
      ci.col = "lightblue",
      ci.lty = 0,
      col = "blue",
      lwd = 2,
      xlab = "Number of stomachs examined",
-     ylab = "Cumulative prey categories")
+     ylab = "Cumulative prey categories",
+     main = "Taxon Accumulation Curve (Han Feb)")
+
+plot(hanMayAccum,
+     ci.type = "poly",
+     ci.col = "lightblue",
+     ci.lty = 0,
+     col = "blue",
+     lwd = 2,
+     xlab = "Number of stomachs examined",
+     ylab = "Cumulative prey categories",
+     main = "Taxon Accumulation Curve (Han May)")
+
+plot(japFebAccum,
+     ci.type = "poly",
+     ci.col = "lightblue",
+     ci.lty = 0,
+     col = "blue",
+     lwd = 2,
+     xlab = "Number of stomachs examined",
+     ylab = "Cumulative prey categories",
+     main = "Taxon Accumulation Curve (Jap Feb)")
+
+plot(japMayAccum,
+     ci.type = "poly",
+     ci.col = "lightblue",
+     ci.lty = 0,
+     col = "blue",
+     lwd = 2,
+     xlab = "Number of stomachs examined",
+     ylab = "Cumulative prey categories",
+     main = "Taxon Accumulation Curve (Jap May)")
+
+plot(allAccum,
+     ci.type = "poly",
+     ci.col = "lightblue",
+     ci.lty = 0,
+     col = "blue",
+     lwd = 2,
+     xlab = "Number of stomachs examined",
+     ylab = "Cumulative prey categories",
+     main = "Taxon Accumulation Curve (All)")
 
 
 ```
