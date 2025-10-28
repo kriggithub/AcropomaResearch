@@ -7,7 +7,7 @@ output:
   pdf_document: default
 ---
 ```{r, include = F}
-setwd("/cloud/project/GhedottiVossResearch")
+# setwd("/cloud/project/GhedottiVossResearch")
 fishdat2 <- read.csv("fishdat2.csv")
 fishdat1sum <- read.csv("fishdat1sum.csv")
 library(tidyverse)
@@ -979,5 +979,229 @@ fishvol.glht <- glht(fishvolglm, linfct = K_fishvol)
 summary(fishvol.glht, test = adjusted(type = "none"))
 
 ```
+## IRI Calculations
+```{r}
+# IRI = [# individs. with the item/# individs. with any item(s)] * [(# of a prey item / total # prey items) + (sum of volumes of a prey item / sum of volumes of all prey items)]
+
+
+itemdata <- read.csv(file = "fishdat1sum.csv")
+countdata <- read.csv(file = "fishdat2.csv")
+countdata <- countdata %>% mutate(animalcount = ifelse(animal > 0, 1, 0))
+countdata <- countdata %>% mutate(crustaceancount = ifelse(crustacean > 0, 1, 0))
+countdata <- countdata %>% mutate(fishcount = ifelse(fish > 0, 1, 0))
+countdata <- countdata %>% mutate(molluskcount = ifelse(mollusk > 0, 1, 0))
+
+######################
+# hanedai, may
+######################
+hanMayItemSub <- itemdata %>% 
+  filter(Species == "Acropoma hanedai" & Month == "May")
+hanMayCountSub <- countdata %>% 
+  filter(Species == "Acropoma hanedai" & Month == "May")
+
+
+nHMindivid <- sum(hanMayCountSub$Content)
+nHMitems <- sum(hanMayItemSub$Category != "none")
+volHMitems <- sum(hanMayCountSub[, c("animal", "crustacean", "fish", "mollusk")])
+
+
+# animal
+nHManimalIndivid <- sum(hanMayCountSub$animalcount)
+nHManimalItems <- sum(hanMayItemSub$Category == "animal")
+volHManimal <- sum(hanMayCountSub$animal)
+HManimalIRI <- ((nHManimalIndivid/nHMindivid) * ((nHManimalItems/nHMitems) + (volHManimal/volHMitems))) * 100
+
+# crustacean
+nHMcrustaceanIndivid <- sum(hanMayCountSub$crustaceancount)
+nHMcrustaceanItems <- sum(hanMayItemSub$Category == "crustacean")
+volHMcrustacean <- sum(hanMayCountSub$crustacean)
+HMcrustaceanIRI <- ((nHMcrustaceanIndivid/nHMindivid) * ((nHMcrustaceanItems/nHMitems) + (volHMcrustacean/volHMitems))) * 100
+
+# fish
+nHMfishIndivid <- sum(hanMayCountSub$fishcount)
+nHMfishItems <- sum(hanMayItemSub$Category == "fish")
+volHMfish <- sum(hanMayCountSub$fish)
+HMfishIRI <- ((nHMfishIndivid/nHMindivid) * ((nHMfishItems/nHMitems) + (volHMfish/volHMitems))) * 100
+
+# mollusk
+nHMmolluskIndivid <- sum(hanMayCountSub$molluskcount)
+nHMmolluskItems <- sum(hanMayItemSub$Category == "mollusk")
+volHMmollusk <- sum(hanMayCountSub$mollusk)
+HMmolluskIRI <- ((nHMmolluskIndivid/nHMindivid) * ((nHMmolluskItems/nHMitems) + (volHMmollusk/volHMitems))) * 100
+
+
+
+hmIRItable <- tibble(
+  Category = c("animal", "crustacean", "fish", "mollusk"),
+  IRI = c(HManimalIRI, HMcrustaceanIRI, HMfishIRI, HMmolluskIRI)
+)
+
+
+######################
+# hanedai, feb
+######################
+hanFebItemSub <- itemdata %>% 
+  filter(Species == "Acropoma hanedai" & Month == "Feb")
+hanFebCountSub <- countdata %>% 
+  filter(Species == "Acropoma hanedai" & Month == "Feb")
+
+
+nHFindivid <- sum(hanFebCountSub$Content)
+nHFitems <- sum(hanFebItemSub$Category != "none")
+volHFitems <- sum(hanFebCountSub[, c("animal", "crustacean", "fish", "mollusk")])
+
+
+# animal
+nHFanimalIndivid <- sum(hanFebCountSub$animalcount)
+nHFanimalItems <- sum(hanFebItemSub$Category == "animal")
+volHFanimal <- sum(hanFebCountSub$animal)
+HFanimalIRI <- ((nHFanimalIndivid/nHFindivid) * ((nHFanimalItems/nHFitems) + (volHFanimal/volHFitems))) * 100
+
+# crustacean
+nHFcrustaceanIndivid <- sum(hanFebCountSub$crustaceancount)
+nHFcrustaceanItems <- sum(hanFebItemSub$Category == "crustacean")
+volHFcrustacean <- sum(hanFebCountSub$crustacean)
+HFcrustaceanIRI <- ((nHFcrustaceanIndivid/nHFindivid) * ((nHFcrustaceanItems/nHFitems) + (volHFcrustacean/volHFitems))) * 100
+
+# fish
+nHFfishIndivid <- sum(hanFebCountSub$fishcount)
+nHFfishItems <- sum(hanFebItemSub$Category == "fish")
+volHFfish <- sum(hanFebCountSub$fish)
+HFfishIRI <- ((nHFfishIndivid/nHFindivid) * ((nHFfishItems/nHFitems) + (volHFfish/volHFitems))) * 100
+
+# mollusk
+nHFmolluskIndivid <- sum(hanFebCountSub$molluskcount)
+nHFmolluskItems <- sum(hanFebItemSub$Category == "mollusk")
+volHFmollusk <- sum(hanFebCountSub$mollusk)
+HFmolluskIRI <- ((nHFmolluskIndivid/nHFindivid) * ((nHFmolluskItems/nHFitems) + (volHFmollusk/volHFitems))) * 100
+
+
+hfIRItable <- tibble(
+  Category = c("animal", "crustacean", "fish", "mollusk"),
+  IRI = c(HFanimalIRI, HFcrustaceanIRI, HFfishIRI, HFmolluskIRI)
+)
+
+
+######################
+# japonicum, feb
+######################
+japFebItemSub <- itemdata %>% 
+  filter(Species == "Acropoma japonicum" & Month == "Feb")
+japFebCountSub <- countdata %>% 
+  filter(Species == "Acropoma japonicum" & Month == "Feb")
+
+
+nJFindivid <- sum(japFebCountSub$Content)
+nJFitems <- sum(japFebItemSub$Category != "none")
+volJFitems <- sum(japFebCountSub[, c("animal", "crustacean", "fish", "mollusk")])
+
+
+# animal
+nJFanimalIndivid <- sum(japFebCountSub$animalcount)
+nJFanimalItems <- sum(japFebItemSub$Category == "animal")
+volJFanimal <- sum(japFebCountSub$animal)
+JFanimalIRI <- ((nJFanimalIndivid/nJFindivid) * ((nJFanimalItems/nJFitems) + (volJFanimal/volJFitems))) * 100
+
+# crustacean
+nJFcrustaceanIndivid <- sum(japFebCountSub$crustaceancount)
+nJFcrustaceanItems <- sum(japFebItemSub$Category == "crustacean")
+volJFcrustacean <- sum(japFebCountSub$crustacean)
+JFcrustaceanIRI <- ((nJFcrustaceanIndivid/nJFindivid) * ((nJFcrustaceanItems/nJFitems) + (volJFcrustacean/volJFitems))) * 100
+
+# fish
+nJFfishIndivid <- sum(japFebCountSub$fishcount)
+nJFfishItems <- sum(japFebItemSub$Category == "fish")
+volJFfish <- sum(japFebCountSub$fish)
+JFfishIRI <- ((nJFfishIndivid/nJFindivid) * ((nJFfishItems/nJFitems) + (volJFfish/volJFitems))) * 100
+
+# mollusk
+nJFmolluskIndivid <- sum(japFebCountSub$molluskcount)
+nJFmolluskItems <- sum(japFebItemSub$Category == "mollusk")
+volJFmollusk <- sum(japFebCountSub$mollusk)
+JFmolluskIRI <- ((nJFmolluskIndivid/nJFindivid) * ((nJFmolluskItems/nJFitems) + (volJFmollusk/volJFitems))) * 100
+
+
+jfIRItable <- tibble(
+  Category = c("animal", "crustacean", "fish", "mollusk"),
+  IRI = c(JFanimalIRI, JFcrustaceanIRI, JFfishIRI, JFmolluskIRI)
+)
+
+
+
+######################
+# japonicum, may
+######################
+japMayItemSub <- itemdata %>% 
+  filter(Species == "Acropoma japonicum" & Month == "May")
+japMayCountSub <- countdata %>% 
+  filter(Species == "Acropoma japonicum" & Month == "May")
+
+
+nJMindivid <- sum(japMayCountSub$Content)
+nJMitems <- sum(japMayItemSub$Category != "none")
+volJMitems <- sum(japMayCountSub[, c("animal", "crustacean", "fish", "mollusk")])
+
+
+# animal
+nJManimalIndivid <- sum(japMayCountSub$animalcount)
+nJManimalItems <- sum(japMayItemSub$Category == "animal")
+volJManimal <- sum(japMayCountSub$animal)
+JManimalIRI <- ((nJManimalIndivid/nJMindivid) * ((nJManimalItems/nJMitems) + (volJManimal/volJMitems))) * 100
+
+# crustacean
+nJMcrustaceanIndivid <- sum(japMayCountSub$crustaceancount)
+nJMcrustaceanItems <- sum(japMayItemSub$Category == "crustacean")
+volJMcrustacean <- sum(japMayCountSub$crustacean)
+JMcrustaceanIRI <- ((nJMcrustaceanIndivid/nJMindivid) * ((nJMcrustaceanItems/nJMitems) + (volJMcrustacean/volJMitems))) * 100
+
+# fish
+nJMfishIndivid <- sum(japMayCountSub$fishcount)
+nJMfishItems <- sum(japMayItemSub$Category == "fish")
+volJMfish <- sum(japMayCountSub$fish)
+JMfishIRI <- ((nJMfishIndivid/nJMindivid) * ((nJMfishItems/nJMitems) + (volJMfish/volJMitems))) * 100
+
+# mollusk
+nJMmolluskIndivid <- sum(japMayCountSub$molluskcount)
+nJMmolluskItems <- sum(japMayItemSub$Category == "mollusk")
+volJMmollusk <- sum(japMayCountSub$mollusk)
+JMmolluskIRI <- ((nJMmolluskIndivid/nJMindivid) * ((nJMmolluskItems/nJMitems) + (volJMmollusk/volJMitems))) * 100
+
+
+jmIRItable <- tibble(
+  Category = c("animal", "crustacean", "fish", "mollusk"),
+  IRI = c(JManimalIRI, JMcrustaceanIRI, JMfishIRI, JMmolluskIRI)
+)
+
+
+
+
+library(gridExtra)
+library(grid)
+
+# Add group labels to each table for clarity
+hmIRItable$Group <- "Hanedai May"
+hfIRItable$Group <- "Hanedai Feb"
+jfIRItable$Group <- "Japonicum Feb"
+jmIRItable$Group <- "Japonicum May"
+
+# Turn each tibble into a tableGrob
+tab1 <- tableGrob(hmIRItable, rows = NULL)
+tab2 <- tableGrob(hfIRItable, rows = NULL)
+tab3 <- tableGrob(jfIRItable, rows = NULL)
+tab4 <- tableGrob(jmIRItable, rows = NULL)
+
+# Arrange them side by side (2x2 grid if easier to read, or 1x4 if wide is fine)
+g <- grid.arrange(tab1, tab2, tab3, tab4, ncol = 2)
+
+# Save as an image
+ggsave("allIRItables.png", g, width = 10, height = 6)
+
+
+
+
+
+
+```
+
 
 
