@@ -979,12 +979,19 @@ fishvol.glht <- glht(fishvolglm, linfct = K_fishvol)
 summary(fishvol.glht, test = adjusted(type = "none"))
 
 ```
+
+
+
+
+
+
+
 ## IRI Calculations
 ```{r}
 # IRI = [# individs. with the item/# individs. with any item(s)] * [(# of a prey item / total # prey items) + (sum of volumes of a prey item / sum of volumes of all prey items)]
+library(tidyverse)
 
-
-itemdata <- read.csv(file = "fishdat1sum.csv")
+itemdata <- read.csv(file = "fishdat1.csv")
 countdata <- read.csv(file = "fishdat2.csv")
 countdata <- countdata %>% mutate(animalcount = ifelse(animal > 0, 1, 0))
 countdata <- countdata %>% mutate(crustaceancount = ifelse(crustacean > 0, 1, 0))
@@ -999,7 +1006,8 @@ hanMayItemSub <- itemdata %>%
 hanMayCountSub <- countdata %>% 
   filter(Species == "Acropoma hanedai" & Month == "May")
 
-
+slHMall <- mean(hanMayItemSub$SL)
+nHMall <- nrow(hanMayCountSub)
 nHMindivid <- sum(hanMayCountSub$Content)
 nHMitems <- sum(hanMayItemSub$Category != "none")
 volHMitems <- sum(hanMayCountSub[, c("animal", "crustacean", "fish", "mollusk")])
@@ -1037,6 +1045,28 @@ hmIRItable <- tibble(
 )
 
 
+hmCountsTable <- tibble(
+  "Total Individuals" = nHMall,
+  "Mean SL" = slHMall,
+  "W/Content" = nHMindivid,
+  "Animal Content" = nHManimalIndivid,
+  "Crustacean Content" = nHMcrustaceanIndivid,
+  "Teleost Content" = nHMfishIndivid,
+  "Mollusk Content" = nHMmolluskIndivid,
+  "Total Items" = nHMitems,
+  "Animal Items" = nHManimalItems,
+  "Crustacean Items" = nHMcrustaceanItems,
+  "Teleost Items" = nHMfishItems,
+  "Mollusk Items" = nHMmolluskItems,
+  "Total Volume" = volHMitems,
+  "Animal Volume" = volHManimal,
+  "Crustacean Volume" = volHMcrustacean,
+  "Teleost Volume" = volHMfish,
+  "Mollusk Volume" = volHMmollusk,
+  Group = "Hanedai May"
+)
+
+
 ######################
 # hanedai, feb
 ######################
@@ -1045,7 +1075,8 @@ hanFebItemSub <- itemdata %>%
 hanFebCountSub <- countdata %>% 
   filter(Species == "Acropoma hanedai" & Month == "Feb")
 
-
+slHFall <- mean(hanFebItemSub$SL)
+nHFall <- nrow(hanFebCountSub)
 nHFindivid <- sum(hanFebCountSub$Content)
 nHFitems <- sum(hanFebItemSub$Category != "none")
 volHFitems <- sum(hanFebCountSub[, c("animal", "crustacean", "fish", "mollusk")])
@@ -1082,6 +1113,32 @@ hfIRItable <- tibble(
 )
 
 
+hfCountsTable <- tibble(
+  "Total Individuals" = nHFall,
+  "Mean SL" = slHFall,
+  "W/Content" = nHFindivid,
+  "Animal Content" = nHFanimalIndivid,
+  "Crustacean Content" = nHFcrustaceanIndivid,
+  "Teleost Content" = nHFfishIndivid,
+  "Mollusk Content" = nHFmolluskIndivid,
+  "Total Items" = nHFitems,
+  "Animal Items" = nHFanimalItems,
+  "Crustacean Items" = nHFcrustaceanItems,
+  "Teleost Items" = nHFfishItems,
+  "Mollusk Items" = nHFmolluskItems,
+  "Total Volume" = volHFitems,
+  "Animal Volume" = volHFanimal,
+  "Crustacean Volume" = volHFcrustacean,
+  "Teleost Volume" = volHFfish,
+  "Mollusk Volume" = volHFmollusk,
+  Group = "Hanedai Feb"
+)
+
+
+
+
+
+
 ######################
 # japonicum, feb
 ######################
@@ -1090,7 +1147,8 @@ japFebItemSub <- itemdata %>%
 japFebCountSub <- countdata %>% 
   filter(Species == "Acropoma japonicum" & Month == "Feb")
 
-
+slJFall <- mean(japFebItemSub$SL)
+nJFall <- nrow(japFebCountSub)
 nJFindivid <- sum(japFebCountSub$Content)
 nJFitems <- sum(japFebItemSub$Category != "none")
 volJFitems <- sum(japFebCountSub[, c("animal", "crustacean", "fish", "mollusk")])
@@ -1128,6 +1186,33 @@ jfIRItable <- tibble(
 
 
 
+
+jfCountsTable <- tibble(
+  "Total Individuals" = nJFall,
+  "Mean SL" = slJFall,
+  "W/Content" = nJFindivid,
+  "Animal Content" = nJFanimalIndivid,
+  "Crustacean Content" = nJFcrustaceanIndivid,
+  "Teleost Content" = nJFfishIndivid,
+  "Mollusk Content" = nJFmolluskIndivid,
+  "Total Items" = nJFitems,
+  "Animal Items" = nJFanimalItems,
+  "Crustacean Items" = nJFcrustaceanItems,
+  "Teleost Items" = nJFfishItems,
+  "Mollusk Items" = nJFmolluskItems,
+  "Total Volume" = volJFitems,
+  "Animal Volume" = volJFanimal,
+  "Crustacean Volume" = volJFcrustacean,
+  "Teleost Volume" = volJFfish,
+  "Mollusk Volume" = volJFmollusk,
+  Group = "Japonicum Feb"
+)
+
+
+
+
+
+
 ######################
 # japonicum, may
 ######################
@@ -1136,7 +1221,8 @@ japMayItemSub <- itemdata %>%
 japMayCountSub <- countdata %>% 
   filter(Species == "Acropoma japonicum" & Month == "May")
 
-
+slJMall <- mean(japMayItemSub$SL)
+nJMall <- nrow(japMayCountSub)
 nJMindivid <- sum(japMayCountSub$Content)
 nJMitems <- sum(japMayItemSub$Category != "none")
 volJMitems <- sum(japMayCountSub[, c("animal", "crustacean", "fish", "mollusk")])
@@ -1173,6 +1259,30 @@ jmIRItable <- tibble(
 )
 
 
+jmCountsTable <- tibble(
+  "Total Individuals" = nJMall,
+  "Mean SL" = slJMall,
+  "W/Content" = nJMindivid,
+  "Animal Content" = nJManimalIndivid,
+  "Crustacean Content" = nJMcrustaceanIndivid,
+  "Teleost Content" = nJMfishIndivid,
+  "Mollusk Content" = nJMmolluskIndivid,
+  "Total Items" = nJMitems,
+  "Animal Items" = nJManimalItems,
+  "Crustacean Items" = nJMcrustaceanItems,
+  "Teleost Items" = nJMfishItems,
+  "Mollusk Items" = nJMmolluskItems,
+  "Total Volume" = volJMitems,
+  "Animal Volume" = volJManimal,
+  "Crustacean Volume" = volJMcrustacean,
+  "Teleost Volume" = volJMfish,
+  "Mollusk Volume" = volJMmollusk,
+  Group = "Japonicum May"
+)
+
+
+
+
 
 
 library(gridExtra)
@@ -1184,18 +1294,58 @@ hfIRItable$Group <- "Hanedai Feb"
 jfIRItable$Group <- "Japonicum Feb"
 jmIRItable$Group <- "Japonicum May"
 
-# Turn each tibble into a tableGrob
-tab1 <- tableGrob(hmIRItable, rows = NULL)
-tab2 <- tableGrob(hfIRItable, rows = NULL)
-tab3 <- tableGrob(jfIRItable, rows = NULL)
-tab4 <- tableGrob(jmIRItable, rows = NULL)
 
-# Arrange them side by side (2x2 grid if easier to read, or 1x4 if wide is fine)
-g <- grid.arrange(tab1, tab2, tab3, tab4, ncol = 2)
+allIRItable <- bind_rows(hmIRItable, hfIRItable, jfIRItable, jmIRItable) %>%
+  mutate(IRI = round(IRI, 2))
+allIRItable <- tableGrob(allIRItable)
 
-# Save as an image
-ggsave("allIRItables.png", g, width = 10, height = 6)
 
+
+
+
+allCountsTable <- bind_rows(hmCountsTable, hfCountsTable, jfCountsTable, jmCountsTable)
+
+
+library(dplyr)
+library(tidyr)
+
+# First combine all four "Counts" tables
+allCountsTable <- bind_rows(hmCountsTable, hfCountsTable, jfCountsTable, jmCountsTable) %>%
+  mutate(
+    # Format Mean SL to 2 decimals
+    `Mean SL` = formatC(`Mean SL`, format = "f", digits = 2),
+    
+    # Format all Volume columns to 1 decimal
+    across(contains("Volume"), ~ formatC(., format = "f", digits = 1)),
+    
+    # Format everything else numeric (but not Group) as whole numbers
+    across(where(is.numeric) & !contains("Volume") & !matches("Mean SL"), 
+           ~ formatC(., format = "f", digits = 0))
+  )
+
+
+
+# Reshape: make each count type a row, and each Group a column
+allCountsTable_long <- allCountsTable %>%
+  pivot_longer(
+    cols = -Group,          # everything except the Group column
+    names_to = "Measure",   # new column with row labels
+    values_to = "Value"     # new column with values
+  )
+
+allCountsTable_wide <- allCountsTable_long %>%
+  pivot_wider(
+    names_from = Group,     # groups become column headers
+    values_from = Value     # fill with the values
+  )
+
+
+
+allCountsTable <- tableGrob(allCountsTable_wide)
+
+
+#ggsave("allIRItable.png", allIRItable)
+#ggsave("allCountsTable.png", allCountsTable)
 
 
 
@@ -1203,5 +1353,44 @@ ggsave("allIRItables.png", g, width = 10, height = 6)
 
 ```
 
+## Species Accumulation Curves
+
+```{r}
+library(vegan)
+
+fishCountData <- read.csv("fishdat2.csv")
+fishCountData <- fishCountData %>% mutate(animalcount = ifelse(animal > 0, 1, 0))
+fishCountData <- fishCountData %>% mutate(crustaceancount = ifelse(crustacean > 0, 1, 0))
+fishCountData <- fishCountData %>% mutate(fishcount = ifelse(fish > 0, 1, 0))
+fishCountData <- fishCountData %>% mutate(molluskcount = ifelse(mollusk > 0, 1, 0))
+
+accumdata <- fishCountData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
+
+accum <- specaccum(accumdata, method = "random")
+
+
+plot(accum,
+     ci.type = "poly",
+     ci.col = "lightblue",
+     ci.lty = 0,
+     col = "blue",
+     lwd = 2,
+     xlab = "Number of stomachs examined",
+     ylab = "Cumulative prey categories")
+
+
+```
+
+## Niche Breadth and Overlap
+
+```{r}
+
+library(indicspecies)
+# Niche Breadth
+
+
+
+
+```
 
 

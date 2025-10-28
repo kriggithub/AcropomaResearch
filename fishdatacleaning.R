@@ -6,7 +6,7 @@
 
 #load in packages & datasets (ignore old data)
 library(tidyverse)
-setwd("/cloud/project/GhedottiVossResearch")
+#setwd("/cloud/project/GhedottiVossResearch")
 ajapdatadj <- read.csv("Ajapdietadj.csv")
 ahandatadj <- read.csv("Ahandietadj.csv")
   #ajapdat <- read.csv("Ajapdiet.csv")
@@ -18,7 +18,7 @@ ahandatadj <- read.csv("Ahandietadj.csv")
 #rename columns of interest to match and select them
 ajapdatadj <- rename(ajapdatadj, ID = Ind., Month = month, Jar = JFBM, SL = SL..mm., Category = category, Vol = Volume..mm.3.)
 ahandatadj <- rename(ahandatadj, ID = Ind., Month = Mo., Jar = JFBM, SL = SL..mm., Category = category, Vol = Volume..mm.3.)
-ajapdatadj <- select(ajapdatadj, Species, Jar, ID, Month, SL, Category, Vol)
+ajapdatadj <- ajpadatadj %>% select(Species, Jar, ID, Month, SL, Category, Vol)
 ahandatadj <- select(ahandatadj, Species, Jar, ID, Month, SL, Category, Vol)
 
 
@@ -28,6 +28,12 @@ ajapdatadj <- ajapdatadj %>% filter(!is.na(SL))
 ahandatadj <- ahandatadj %>% filter(!is.na(SL))
   #nrow(ajapdatadj) #85 obs
   #nrow(ahandatadj) #96 obs
+
+
+ajapmay <- ajapdatadj %>% filter(Month == 2)
+
+
+
 
 
 
@@ -139,6 +145,8 @@ fishdat2 <- relocate(fishdat2, SClass, .after = SL)
 length(unique(fishdat2$FishID)) #170
   #write.csv(fishdat2, file = "fishdat2.csv")
   #write.csv(fishdat1sum, file = "fishdat1sum.csv")
+
+#write.csv(fishdat1, file = "fishdat1.csv")
 
 
 
