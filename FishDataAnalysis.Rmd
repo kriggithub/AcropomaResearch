@@ -1296,7 +1296,14 @@ jmIRItable$Group <- "Japonicum May"
 
 
 allIRItable <- bind_rows(hmIRItable, hfIRItable, jfIRItable, jmIRItable) %>%
-  mutate(IRI = round(IRI, 2))
+  mutate(IRI = round(IRI, 2)) %>% 
+  pivot_wider(
+    names_from = Group,
+    values_from = IRI
+  )
+
+
+
 allIRItable <- tableGrob(allIRItable)
 
 
@@ -1344,7 +1351,7 @@ allCountsTable_wide <- allCountsTable_long %>%
 allCountsTable <- tableGrob(allCountsTable_wide)
 
 
-#ggsave("allIRItable.png", allIRItable)
+ggsave("allIRItable.png", allIRItable)
 #ggsave("allCountsTable.png", allCountsTable)
 
 
