@@ -1376,18 +1376,52 @@ hanFebData <- fishCountData %>% filter(Species == "Acropoma hanedai" & Month == 
 hanMayData <- fishCountData %>% filter(Species == "Acropoma hanedai" & Month == "May")
 japFebData <- fishCountData %>% filter(Species == "Acropoma japonicum" & Month == "Feb")
 japMayData <- fishCountData %>% filter(Species == "Acropoma japonicum" & Month == "May")
+hanData <- fishCountData %>% filter(Species == "Acropoma hanedai")
+japData <- fishCountData %>% filter(Species == "Acropoma japonicum")
+
+
 
 hanFebAccumData <- hanFebData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
 hanMayAccumData <- hanMayData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
 japFebAccumData <- japFebData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
 japMayAccumData <- japMayData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
 allAccumData <- fishCountData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
+hanAccumData <- hanData %>% dplyr::select(crustaceancount, fishcount, molluskcount)
+japAccumData <- japData %>% dplyr::select(crustaceancount, fishcount, molluskcount)
+
+
 
 hanFebAccum <- specaccum(hanFebAccumData, method = "random")
 hanMayAccum <- specaccum(hanMayAccumData, method = "random")
 japFebAccum <- specaccum(japFebAccumData, method = "random")
 japMayAccum <- specaccum(japMayAccumData, method = "random")
 allAccum <- specaccum(allAccumData, method = "random")
+hanAccum <- specaccum(hanAccumData, method = "random")
+japAccum <- specaccum(japAccumData, method = "random")
+
+
+plot(hanAccum,
+     ci.type = "poly",
+     ci.col = "lightblue",
+     ci.lty = 0,
+     col = "blue",
+     lwd = 2,
+     xlab = "Number of stomachs examined",
+     ylab = "Cumulative prey categories",
+     main = "Taxon Accumulation Curve (All Han)")
+
+plot(japAccum,
+     ci.type = "poly",
+     ci.col = "lightblue",
+     ci.lty = 0,
+     col = "blue",
+     lwd = 2,
+     xlab = "Number of stomachs examined",
+     ylab = "Cumulative prey categories",
+     main = "Taxon Accumulation Curve (All Jap)")
+
+
+
 
 plot(hanFebAccum,
      ci.type = "poly",
