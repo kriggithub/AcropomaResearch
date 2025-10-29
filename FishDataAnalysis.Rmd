@@ -988,7 +988,6 @@ summary(fishvol.glht, test = adjusted(type = "none"))
 
 ## IRI Calculations
 ```{r}
-# IRI = [# individs. with the item/# individs. with any item(s)] * [(# of a prey item / total # prey items) + (sum of volumes of a prey item / sum of volumes of all prey items)]
 library(tidyverse)
 
 itemdata <- read.csv(file = "fishdat1.csv")
@@ -1017,25 +1016,25 @@ volHMitems <- sum(hanMayCountSub[, c("animal", "crustacean", "fish", "mollusk")]
 nHManimalIndivid <- sum(hanMayCountSub$animalcount)
 nHManimalItems <- sum(hanMayItemSub$Category == "animal")
 volHManimal <- sum(hanMayCountSub$animal)
-HManimalIRI <- ((nHManimalIndivid/nHMindivid) * ((nHManimalItems/nHMitems) + (volHManimal/volHMitems))) * 100
+HManimalIRI <- ((nHManimalIndivid/nHMindivid) * 100 * ((nHManimalItems/nHMitems) * 100 + (volHManimal/volHMitems) * 100))
 
 # crustacean
 nHMcrustaceanIndivid <- sum(hanMayCountSub$crustaceancount)
 nHMcrustaceanItems <- sum(hanMayItemSub$Category == "crustacean")
 volHMcrustacean <- sum(hanMayCountSub$crustacean)
-HMcrustaceanIRI <- ((nHMcrustaceanIndivid/nHMindivid) * ((nHMcrustaceanItems/nHMitems) + (volHMcrustacean/volHMitems))) * 100
+HMcrustaceanIRI <- ((nHMcrustaceanIndivid/nHMindivid) * 100 * ((nHMcrustaceanItems/nHMitems) * 100 + (volHMcrustacean/volHMitems) * 100))
 
 # fish
 nHMfishIndivid <- sum(hanMayCountSub$fishcount)
 nHMfishItems <- sum(hanMayItemSub$Category == "fish")
 volHMfish <- sum(hanMayCountSub$fish)
-HMfishIRI <- ((nHMfishIndivid/nHMindivid) * ((nHMfishItems/nHMitems) + (volHMfish/volHMitems))) * 100
+HMfishIRI <- ((nHMfishIndivid/nHMindivid) * 100 * ((nHMfishItems/nHMitems) * 100 + (volHMfish/volHMitems) * 100))
 
 # mollusk
 nHMmolluskIndivid <- sum(hanMayCountSub$molluskcount)
 nHMmolluskItems <- sum(hanMayItemSub$Category == "mollusk")
 volHMmollusk <- sum(hanMayCountSub$mollusk)
-HMmolluskIRI <- ((nHMmolluskIndivid/nHMindivid) * ((nHMmolluskItems/nHMitems) + (volHMmollusk/volHMitems))) * 100
+HMmolluskIRI <- ((nHMmolluskIndivid/nHMindivid) * 100 * ((nHMmolluskItems/nHMitems) * 100 + (volHMmollusk/volHMitems) * 100))
 
 
 
@@ -1043,6 +1042,10 @@ hmIRItable <- tibble(
   Category = c("animal", "crustacean", "fish", "mollusk"),
   IRI = c(HManimalIRI, HMcrustaceanIRI, HMfishIRI, HMmolluskIRI)
 )
+
+hmIRItable <- hmIRItable %>%
+  mutate(IRI = (IRI / sum(IRI)) * 100)
+
 
 
 hmCountsTable <- tibble(
@@ -1086,31 +1089,34 @@ volHFitems <- sum(hanFebCountSub[, c("animal", "crustacean", "fish", "mollusk")]
 nHFanimalIndivid <- sum(hanFebCountSub$animalcount)
 nHFanimalItems <- sum(hanFebItemSub$Category == "animal")
 volHFanimal <- sum(hanFebCountSub$animal)
-HFanimalIRI <- ((nHFanimalIndivid/nHFindivid) * ((nHFanimalItems/nHFitems) + (volHFanimal/volHFitems))) * 100
+HFanimalIRI <- ((nHFanimalIndivid/nHFindivid) * 100 * ((nHFanimalItems/nHFitems) * 100 + (volHFanimal/volHFitems) * 100))
 
 # crustacean
 nHFcrustaceanIndivid <- sum(hanFebCountSub$crustaceancount)
 nHFcrustaceanItems <- sum(hanFebItemSub$Category == "crustacean")
 volHFcrustacean <- sum(hanFebCountSub$crustacean)
-HFcrustaceanIRI <- ((nHFcrustaceanIndivid/nHFindivid) * ((nHFcrustaceanItems/nHFitems) + (volHFcrustacean/volHFitems))) * 100
+HFcrustaceanIRI <- ((nHFcrustaceanIndivid/nHFindivid) * 100 * ((nHFcrustaceanItems/nHFitems) * 100 + (volHFcrustacean/volHFitems) * 100))
 
 # fish
 nHFfishIndivid <- sum(hanFebCountSub$fishcount)
 nHFfishItems <- sum(hanFebItemSub$Category == "fish")
 volHFfish <- sum(hanFebCountSub$fish)
-HFfishIRI <- ((nHFfishIndivid/nHFindivid) * ((nHFfishItems/nHFitems) + (volHFfish/volHFitems))) * 100
+HFfishIRI <- ((nHFfishIndivid/nHFindivid) * 100 * ((nHFfishItems/nHFitems) * 100 + (volHFfish/volHFitems) * 100))
 
 # mollusk
 nHFmolluskIndivid <- sum(hanFebCountSub$molluskcount)
 nHFmolluskItems <- sum(hanFebItemSub$Category == "mollusk")
 volHFmollusk <- sum(hanFebCountSub$mollusk)
-HFmolluskIRI <- ((nHFmolluskIndivid/nHFindivid) * ((nHFmolluskItems/nHFitems) + (volHFmollusk/volHFitems))) * 100
+HFmolluskIRI <- ((nHFmolluskIndivid/nHFindivid) * 100 * ((nHFmolluskItems/nHFitems) * 100 + (volHFmollusk/volHFitems) * 100))
 
 
 hfIRItable <- tibble(
   Category = c("animal", "crustacean", "fish", "mollusk"),
   IRI = c(HFanimalIRI, HFcrustaceanIRI, HFfishIRI, HFmolluskIRI)
 )
+
+hfIRItable <- hfIRItable %>%
+  mutate(IRI = (IRI / sum(IRI)) * 100)
 
 
 hfCountsTable <- tibble(
@@ -1158,25 +1164,25 @@ volJFitems <- sum(japFebCountSub[, c("animal", "crustacean", "fish", "mollusk")]
 nJFanimalIndivid <- sum(japFebCountSub$animalcount)
 nJFanimalItems <- sum(japFebItemSub$Category == "animal")
 volJFanimal <- sum(japFebCountSub$animal)
-JFanimalIRI <- ((nJFanimalIndivid/nJFindivid) * ((nJFanimalItems/nJFitems) + (volJFanimal/volJFitems))) * 100
+JFanimalIRI <- ((nJFanimalIndivid/nJFindivid) * 100 * ((nJFanimalItems/nJFitems) * 100 + (volJFanimal/volJFitems) * 100))
 
 # crustacean
 nJFcrustaceanIndivid <- sum(japFebCountSub$crustaceancount)
 nJFcrustaceanItems <- sum(japFebItemSub$Category == "crustacean")
 volJFcrustacean <- sum(japFebCountSub$crustacean)
-JFcrustaceanIRI <- ((nJFcrustaceanIndivid/nJFindivid) * ((nJFcrustaceanItems/nJFitems) + (volJFcrustacean/volJFitems))) * 100
+JFcrustaceanIRI <- ((nJFcrustaceanIndivid/nJFindivid) * 100 * ((nJFcrustaceanItems/nJFitems) * 100 + (volJFcrustacean/volJFitems) * 100))
 
 # fish
 nJFfishIndivid <- sum(japFebCountSub$fishcount)
 nJFfishItems <- sum(japFebItemSub$Category == "fish")
 volJFfish <- sum(japFebCountSub$fish)
-JFfishIRI <- ((nJFfishIndivid/nJFindivid) * ((nJFfishItems/nJFitems) + (volJFfish/volJFitems))) * 100
+JFfishIRI <- ((nJFfishIndivid/nJFindivid) * 100 * ((nJFfishItems/nJFitems) * 100 + (volJFfish/volJFitems) * 100))
 
 # mollusk
 nJFmolluskIndivid <- sum(japFebCountSub$molluskcount)
 nJFmolluskItems <- sum(japFebItemSub$Category == "mollusk")
 volJFmollusk <- sum(japFebCountSub$mollusk)
-JFmolluskIRI <- ((nJFmolluskIndivid/nJFindivid) * ((nJFmolluskItems/nJFitems) + (volJFmollusk/volJFitems))) * 100
+JFmolluskIRI <- ((nJFmolluskIndivid/nJFindivid) * 100 * ((nJFmolluskItems/nJFitems) * 100 + (volJFmollusk/volJFitems) * 100))
 
 
 jfIRItable <- tibble(
@@ -1184,7 +1190,8 @@ jfIRItable <- tibble(
   IRI = c(JFanimalIRI, JFcrustaceanIRI, JFfishIRI, JFmolluskIRI)
 )
 
-
+jfIRItable <- jfIRItable %>%
+  mutate(IRI = (IRI / sum(IRI)) * 100)
 
 
 jfCountsTable <- tibble(
@@ -1232,31 +1239,35 @@ volJMitems <- sum(japMayCountSub[, c("animal", "crustacean", "fish", "mollusk")]
 nJManimalIndivid <- sum(japMayCountSub$animalcount)
 nJManimalItems <- sum(japMayItemSub$Category == "animal")
 volJManimal <- sum(japMayCountSub$animal)
-JManimalIRI <- ((nJManimalIndivid/nJMindivid) * ((nJManimalItems/nJMitems) + (volJManimal/volJMitems))) * 100
+JManimalIRI <- ((nJManimalIndivid/nJMindivid) * 100 * ((nJManimalItems/nJMitems) * 100 + (volJManimal/volJMitems) * 100))
 
 # crustacean
 nJMcrustaceanIndivid <- sum(japMayCountSub$crustaceancount)
 nJMcrustaceanItems <- sum(japMayItemSub$Category == "crustacean")
 volJMcrustacean <- sum(japMayCountSub$crustacean)
-JMcrustaceanIRI <- ((nJMcrustaceanIndivid/nJMindivid) * ((nJMcrustaceanItems/nJMitems) + (volJMcrustacean/volJMitems))) * 100
+JMcrustaceanIRI <- ((nJMcrustaceanIndivid/nJMindivid) * 100 * ((nJMcrustaceanItems/nJMitems) * 100 + (volJMcrustacean/volJMitems) * 100))
 
 # fish
 nJMfishIndivid <- sum(japMayCountSub$fishcount)
 nJMfishItems <- sum(japMayItemSub$Category == "fish")
 volJMfish <- sum(japMayCountSub$fish)
-JMfishIRI <- ((nJMfishIndivid/nJMindivid) * ((nJMfishItems/nJMitems) + (volJMfish/volJMitems))) * 100
+JMfishIRI <- ((nJMfishIndivid/nJMindivid) * 100 * ((nJMfishItems/nJMitems) * 100 + (volJMfish/volJMitems) * 100))
 
 # mollusk
 nJMmolluskIndivid <- sum(japMayCountSub$molluskcount)
 nJMmolluskItems <- sum(japMayItemSub$Category == "mollusk")
 volJMmollusk <- sum(japMayCountSub$mollusk)
-JMmolluskIRI <- ((nJMmolluskIndivid/nJMindivid) * ((nJMmolluskItems/nJMitems) + (volJMmollusk/volJMitems))) * 100
+JMmolluskIRI <- ((nJMmolluskIndivid/nJMindivid) * 100 * ((nJMmolluskItems/nJMitems) * 100 + (volJMmollusk/volJMitems) * 100))
 
 
 jmIRItable <- tibble(
   Category = c("animal", "crustacean", "fish", "mollusk"),
   IRI = c(JManimalIRI, JMcrustaceanIRI, JMfishIRI, JMmolluskIRI)
 )
+
+
+jmIRItable <- jmIRItable %>%
+  mutate(IRI = (IRI / sum(IRI)) * 100)
 
 
 jmCountsTable <- tibble(
