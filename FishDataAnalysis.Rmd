@@ -1601,6 +1601,20 @@ nicheBVol <- round(nicheBVol, 3)
 nicheBVol <- tableGrob(nicheBVol)
 
 
+nicheBpa <- grid.arrange(
+  nicheBpa,
+  top = textGrob("Niche Breadth (Occurance)", 
+                 gp = gpar(fontsize = 14, fontface = "bold"))
+)
+
+nicheBVol <- grid.arrange(
+  nicheBVol,
+  top = textGrob("Niche Breadth (Volume)", 
+                 gp = gpar(fontsize = 14, fontface = "bold"))
+)
+
+
+
 ggsave("nicheBpa.png", nicheBpa, bg = "white", width = 4, height = 2)
 ggsave("nicheBVol.png", nicheBVol, bg = "white", width = 4, height = 2)
 
@@ -1618,6 +1632,20 @@ nicheOvol <- round(nicheOvol, 3)
 
 nicheOpa <- tableGrob(nicheOpa)
 nicheOvol <- tableGrob(nicheOvol)
+
+
+nicheOpa <- grid.arrange(
+  nicheOpa,
+  top = textGrob("Niche Overlap (Occurance)", 
+                 gp = gpar(fontsize = 14, fontface = "bold"))
+)
+
+nicheOvol <- grid.arrange(
+  nicheOvol,
+  top = textGrob("Niche Overlap (Volume)", 
+                 gp = gpar(fontsize = 14, fontface = "bold"))
+)
+
 
 
 ggsave("nicheOpa.png", nicheOpa, bg = "white", width = 11, height = 2)
