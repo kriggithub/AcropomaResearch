@@ -1493,6 +1493,36 @@ plot(allAccum,
 
 library(indicspecies)
 # Niche Breadth
+library(tidyverse)
+library(gridExtra)
+library(grid)
+
+fishCountData <- read.csv("fishdat2.csv")
+fishCountData <- fishCountData %>% mutate(animalcount = ifelse(animal > 0, 1, 0))
+fishCountData <- fishCountData %>% mutate(crustaceancount = ifelse(crustacean > 0, 1, 0))
+fishCountData <- fishCountData %>% mutate(fishcount = ifelse(fish > 0, 1, 0))
+fishCountData <- fishCountData %>% mutate(molluskcount = ifelse(mollusk > 0, 1, 0))
+
+
+nichePaMatrix <- fishCountData %>% 
+  group_by(Species, Month) %>% 
+  summarise(
+    animal = sum(animalcount, na.rm = T),
+    crustacean = sum(crustaceancount, na.rm = T),
+    fish = sum(fishcount, na.rm = T),
+    mollusk = sum(molluskcount, na.rm = T),
+  ) %>% 
+  as.data.frame()
+
+nichePaMatrix$SM <- paste(nichePaMatrix$Species, nichePaMatrix$Month, sep = "_")
+rownames(nichePaMatrix) <- nichePaMatrix$SM
+nichePaMatrix <- nichePaMatrix %>% select(animal:mollusk)
+
+nicheBpa <- nichevar(nichePaMatrix)
+
+nicheBpa <- tableGrob(nicheBpa)
+
+ggsave("nicheBpa.png", nicheBpa)
 
 
 
