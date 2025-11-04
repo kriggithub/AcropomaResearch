@@ -1397,8 +1397,8 @@ hanMayAccumData <- hanMayData %>% dplyr::select(animalcount, crustaceancount, fi
 japFebAccumData <- japFebData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
 japMayAccumData <- japMayData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
 allAccumData <- fishCountData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
-hanAccumData <- hanData %>% dplyr::select(crustaceancount, fishcount, molluskcount)
-japAccumData <- japData %>% dplyr::select(crustaceancount, fishcount, molluskcount)
+hanAccumData <- hanData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
+japAccumData <- japData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
 
 
 
@@ -1411,78 +1411,130 @@ hanAccum <- specaccum(hanAccumData, method = "random")
 japAccum <- specaccum(japAccumData, method = "random")
 
 
-plot(hanAccum,
-     ci.type = "poly",
-     ci.col = "lightblue",
-     ci.lty = 0,
-     col = "blue",
-     lwd = 2,
-     xlab = "Number of stomachs examined",
-     ylab = "Cumulative prey categories",
-     main = "Taxon Accumulation Curve (All Han)")
 
-plot(japAccum,
-     ci.type = "poly",
-     ci.col = "lightblue",
-     ci.lty = 0,
-     col = "blue",
-     lwd = 2,
-     xlab = "Number of stomachs examined",
-     ylab = "Cumulative prey categories",
-     main = "Taxon Accumulation Curve (All Jap)")
+# png("TaxonAccumulation_All.png", width = 2000, height = 2000)
+# 
+# par(mfrow = c(3, 3), mar = c(4, 4, 2, 1))
+# 
+# 
+# plot(hanAccum,
+#      ci.type = "poly",
+#      ci.col = "lightblue",
+#      ci.lty = 0,
+#      col = "blue",
+#      lwd = 2,
+#      xlab = "Number of stomachs examined",
+#      ylab = "Cumulative prey categories",
+#      main = "Taxon Accumulation Curve (All Han)")
+# 
+# plot(japAccum,
+#      ci.type = "poly",
+#      ci.col = "lightblue",
+#      ci.lty = 0,
+#      col = "blue",
+#      lwd = 2,
+#      xlab = "Number of stomachs examined",
+#      ylab = "Cumulative prey categories",
+#      main = "Taxon Accumulation Curve (All Jap)")
+# 
+# 
+# 
+# 
+# plot(hanFebAccum,
+#      ci.type = "poly",
+#      ci.col = "lightblue",
+#      ci.lty = 0,
+#      col = "blue",
+#      lwd = 2,
+#      xlab = "Number of stomachs examined",
+#      ylab = "Cumulative prey categories",
+#      main = "Taxon Accumulation Curve (Han Feb)")
+# 
+# plot(hanMayAccum,
+#      ci.type = "poly",
+#      ci.col = "lightblue",
+#      ci.lty = 0,
+#      col = "blue",
+#      lwd = 2,
+#      xlab = "Number of stomachs examined",
+#      ylab = "Cumulative prey categories",
+#      main = "Taxon Accumulation Curve (Han May)")
+# 
+# plot(japFebAccum,
+#      ci.type = "poly",
+#      ci.col = "lightblue",
+#      ci.lty = 0,
+#      col = "blue",
+#      lwd = 2,
+#      xlab = "Number of stomachs examined",
+#      ylab = "Cumulative prey categories",
+#      main = "Taxon Accumulation Curve (Jap Feb)")
+# 
+# plot(japMayAccum,
+#      ci.type = "poly",
+#      ci.col = "lightblue",
+#      ci.lty = 0,
+#      col = "blue",
+#      lwd = 2,
+#      xlab = "Number of stomachs examined",
+#      ylab = "Cumulative prey categories",
+#      main = "Taxon Accumulation Curve (Jap May)")
+# 
+# plot(allAccum,
+#      ci.type = "poly",
+#      ci.col = "lightblue",
+#      ci.lty = 0,
+#      col = "blue",
+#      lwd = 2,
+#      xlab = "Number of stomachs examined",
+#      ylab = "Cumulative prey categories",
+#      main = "Taxon Accumulation Curve (All)")
+# 
+# dev.off()
 
 
+# create single figure
+png("SpeciesAccumulation.png", width = 1800, height = 1200, res = 150)
+par(mfrow = c(3, 3), mar = c(3, 3, 3, 1), oma = c(4, 4, 2, 0))
+
+# normalize axes
+ylim_fixed <- c(0, 5)
+xmax <- max(
+  hanFebAccum$sites, hanMayAccum$sites, japFebAccum$sites,
+  japMayAccum$sites, hanAccum$sites, japAccum$sites, allAccum$sites
+)
+
+plot(hanAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
+     xlim = c(0, xmax), ylim = ylim_fixed,
+     main = "A. Hanedai (All)", xlab="", ylab="")
+plot(japAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
+     xlim = c(0, xmax), ylim = ylim_fixed,
+     main = "A. Japonicum (All)", xlab="", ylab="")
+plot(hanFebAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
+     xlim = c(0, xmax), ylim = ylim_fixed,
+     main = "A. Hanedai (Feb)", xlab="", ylab="")
+plot(hanMayAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
+     xlim = c(0, xmax), ylim = ylim_fixed,
+     main = "A. Hanedai (May)", xlab="", ylab="")
+plot(japFebAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
+     xlim = c(0, xmax), ylim = ylim_fixed,
+     main = "A. Japonicum (Feb)", xlab="", ylab="")
+plot(japMayAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
+     xlim = c(0, xmax), ylim = ylim_fixed,
+     main = "A. Japonicum (May)", xlab="", ylab="")
+plot(allAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
+     xlim = c(0, xmax), ylim = ylim_fixed,
+     main = "All Acropoma", xlab="", ylab="")
+
+# axis labels
+mtext("Number of stomachs examined", side = 1, outer = TRUE, line = 2)
+mtext("Cumulative prey categories", side = 2, outer = TRUE, line = 2)
+mtext("Species Accumulation Curves",
+      outer = TRUE, cex = 1, line = 0, font = 2)
 
 
-plot(hanFebAccum,
-     ci.type = "poly",
-     ci.col = "lightblue",
-     ci.lty = 0,
-     col = "blue",
-     lwd = 2,
-     xlab = "Number of stomachs examined",
-     ylab = "Cumulative prey categories",
-     main = "Taxon Accumulation Curve (Han Feb)")
+dev.off()
 
-plot(hanMayAccum,
-     ci.type = "poly",
-     ci.col = "lightblue",
-     ci.lty = 0,
-     col = "blue",
-     lwd = 2,
-     xlab = "Number of stomachs examined",
-     ylab = "Cumulative prey categories",
-     main = "Taxon Accumulation Curve (Han May)")
-
-plot(japFebAccum,
-     ci.type = "poly",
-     ci.col = "lightblue",
-     ci.lty = 0,
-     col = "blue",
-     lwd = 2,
-     xlab = "Number of stomachs examined",
-     ylab = "Cumulative prey categories",
-     main = "Taxon Accumulation Curve (Jap Feb)")
-
-plot(japMayAccum,
-     ci.type = "poly",
-     ci.col = "lightblue",
-     ci.lty = 0,
-     col = "blue",
-     lwd = 2,
-     xlab = "Number of stomachs examined",
-     ylab = "Cumulative prey categories",
-     main = "Taxon Accumulation Curve (Jap May)")
-
-plot(allAccum,
-     ci.type = "poly",
-     ci.col = "lightblue",
-     ci.lty = 0,
-     col = "blue",
-     lwd = 2,
-     xlab = "Number of stomachs examined",
-     ylab = "Cumulative prey categories",
-     main = "Taxon Accumulation Curve (All)")
 
 
 ```
@@ -1503,7 +1555,7 @@ fishCountData <- fishCountData %>% mutate(crustaceancount = ifelse(crustacean > 
 fishCountData <- fishCountData %>% mutate(fishcount = ifelse(fish > 0, 1, 0))
 fishCountData <- fishCountData %>% mutate(molluskcount = ifelse(mollusk > 0, 1, 0))
 
-
+# occurance data
 nichePaMatrix <- fishCountData %>% 
   group_by(Species, Month) %>% 
   summarise(
@@ -1519,10 +1571,57 @@ rownames(nichePaMatrix) <- nichePaMatrix$SM
 nichePaMatrix <- nichePaMatrix %>% select(animal:mollusk)
 
 nicheBpa <- nichevar(nichePaMatrix)
+nicheBpa <- round(nicheBpa, 3)
 
 nicheBpa <- tableGrob(nicheBpa)
 
-ggsave("nicheBpa.png", nicheBpa)
+
+# volume data
+nicheVolMatrix <- fishCountData %>% 
+  group_by(Species, Month) %>% 
+  summarise(
+    animal = sum(animal, na.rm = T),
+    crustacean = sum(crustacean, na.rm = T),
+    fish = sum(fish, na.rm = T),
+    mollusk = sum(mollusk, na.rm = T),
+  ) %>% 
+  as.data.frame()
+
+nicheVolMatrix$SM <- paste(nicheVolMatrix$Species, nicheVolMatrix$Month, sep = "_")
+rownames(nicheVolMatrix) <- nicheVolMatrix$SM
+nicheVolMatrix <- nicheVolMatrix %>% select(animal:mollusk)
+nicheVolMatrix <- nicheVolMatrix/rowSums(nicheVolMatrix)
+
+nicheBVol <- nichevar(nicheVolMatrix)
+
+
+nicheBVol <- round(nicheBVol, 3)
+
+
+nicheBVol <- tableGrob(nicheBVol)
+
+
+ggsave("nicheBpa.png", nicheBpa, bg = "white", width = 4, height = 2)
+ggsave("nicheBVol.png", nicheBVol, bg = "white", width = 4, height = 2)
+
+
+
+
+# overlap
+
+nicheOpa <- nicheoverlap(nichePaMatrix, mode = "pairwise")
+nicheOvol <- nicheoverlap(nicheVolMatrix, mode = "pairwise")
+
+nicheOpa <- round(nicheOpa, 3)
+nicheOvol <- round(nicheOvol, 3)
+
+
+nicheOpa <- tableGrob(nicheOpa)
+nicheOvol <- tableGrob(nicheOvol)
+
+
+ggsave("nicheOpa.png", nicheOpa, bg = "white", width = 11, height = 2)
+ggsave("nicheOVol.png", nicheOvol, bg = "white", width = 11, height = 2)
 
 
 
