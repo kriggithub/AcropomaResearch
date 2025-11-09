@@ -1392,13 +1392,13 @@ japData <- fishCountData %>% filter(Species == "Acropoma japonicum")
 
 
 
-hanFebAccumData <- hanFebData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
-hanMayAccumData <- hanMayData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
-japFebAccumData <- japFebData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
-japMayAccumData <- japMayData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
-allAccumData <- fishCountData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
-hanAccumData <- hanData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
-japAccumData <- japData %>% dplyr::select(animalcount, crustaceancount, fishcount, molluskcount)
+hanFebAccumData <- hanFebData %>% dplyr::select(crustaceancount, fishcount, molluskcount)
+hanMayAccumData <- hanMayData %>% dplyr::select(crustaceancount, fishcount, molluskcount)
+japFebAccumData <- japFebData %>% dplyr::select(crustaceancount, fishcount, molluskcount)
+japMayAccumData <- japMayData %>% dplyr::select(crustaceancount, fishcount, molluskcount)
+allAccumData <- fishCountData %>% dplyr::select(crustaceancount, fishcount, molluskcount)
+hanAccumData <- hanData %>% dplyr::select(crustaceancount, fishcount, molluskcount)
+japAccumData <- japData %>% dplyr::select(crustaceancount, fishcount, molluskcount)
 
 
 
@@ -1412,126 +1412,53 @@ japAccum <- specaccum(japAccumData, method = "random")
 
 
 
-# png("TaxonAccumulation_All.png", width = 2000, height = 2000)
-# 
-# par(mfrow = c(3, 3), mar = c(4, 4, 2, 1))
-# 
-# 
-# plot(hanAccum,
-#      ci.type = "poly",
-#      ci.col = "lightblue",
-#      ci.lty = 0,
-#      col = "blue",
-#      lwd = 2,
-#      xlab = "Number of stomachs examined",
-#      ylab = "Cumulative prey categories",
-#      main = "Taxon Accumulation Curve (All Han)")
-# 
-# plot(japAccum,
-#      ci.type = "poly",
-#      ci.col = "lightblue",
-#      ci.lty = 0,
-#      col = "blue",
-#      lwd = 2,
-#      xlab = "Number of stomachs examined",
-#      ylab = "Cumulative prey categories",
-#      main = "Taxon Accumulation Curve (All Jap)")
-# 
-# 
-# 
-# 
-# plot(hanFebAccum,
-#      ci.type = "poly",
-#      ci.col = "lightblue",
-#      ci.lty = 0,
-#      col = "blue",
-#      lwd = 2,
-#      xlab = "Number of stomachs examined",
-#      ylab = "Cumulative prey categories",
-#      main = "Taxon Accumulation Curve (Han Feb)")
-# 
-# plot(hanMayAccum,
-#      ci.type = "poly",
-#      ci.col = "lightblue",
-#      ci.lty = 0,
-#      col = "blue",
-#      lwd = 2,
-#      xlab = "Number of stomachs examined",
-#      ylab = "Cumulative prey categories",
-#      main = "Taxon Accumulation Curve (Han May)")
-# 
-# plot(japFebAccum,
-#      ci.type = "poly",
-#      ci.col = "lightblue",
-#      ci.lty = 0,
-#      col = "blue",
-#      lwd = 2,
-#      xlab = "Number of stomachs examined",
-#      ylab = "Cumulative prey categories",
-#      main = "Taxon Accumulation Curve (Jap Feb)")
-# 
-# plot(japMayAccum,
-#      ci.type = "poly",
-#      ci.col = "lightblue",
-#      ci.lty = 0,
-#      col = "blue",
-#      lwd = 2,
-#      xlab = "Number of stomachs examined",
-#      ylab = "Cumulative prey categories",
-#      main = "Taxon Accumulation Curve (Jap May)")
-# 
-# plot(allAccum,
-#      ci.type = "poly",
-#      ci.col = "lightblue",
-#      ci.lty = 0,
-#      col = "blue",
-#      lwd = 2,
-#      xlab = "Number of stomachs examined",
-#      ylab = "Cumulative prey categories",
-#      main = "Taxon Accumulation Curve (All)")
-# 
-# dev.off()
+
 
 
 # create single figure
-png("SpeciesAccumulation.png", width = 1800, height = 1200, res = 150)
-par(mfrow = c(3, 3), mar = c(3, 3, 3, 1), oma = c(4, 4, 2, 0))
+png("SpeciesAccumulation.png", width = 1200, height = 1800, res = 200)
+layout(matrix(c(1,2, 3,4, 5,6), ncol=2, byrow=TRUE))
+par(mar = c(3, 1, 1, 1), oma = c(4, 4, 3, 0), mgp = c(2, 0.5, 0))
+
 
 # normalize axes
-ylim_fixed <- c(0, 5)
+ylim_fixed <- c(0, 4)
 xmax <- max(
   hanFebAccum$sites, hanMayAccum$sites, japFebAccum$sites,
-  japMayAccum$sites, hanAccum$sites, japAccum$sites, allAccum$sites
+  japMayAccum$sites, hanAccum$sites, japAccum$sites
 )
 
 plot(hanAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
      xlim = c(0, xmax), ylim = ylim_fixed,
-     main = "A. Hanedai (All)", xlab="", ylab="")
+     xlab="Number of stomachs", ylab="", cex.lab = 1.4, cex.main = 1.6)
+text(1, 3.9, "Both collecting periods", cex=1.4, font=2, adj=0)
 plot(japAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
      xlim = c(0, xmax), ylim = ylim_fixed,
-     main = "A. Japonicum (All)", xlab="", ylab="")
-plot(hanFebAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
-     xlim = c(0, xmax), ylim = ylim_fixed,
-     main = "A. Hanedai (Feb)", xlab="", ylab="")
+      xlab="Number of stomachs", ylab="", cex.lab = 1.4, cex.main = 1.6)
+text(1, 3.9, "Both collecting periods", cex=1.4, font=2, adj=0)
 plot(hanMayAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
      xlim = c(0, xmax), ylim = ylim_fixed,
-     main = "A. Hanedai (May)", xlab="", ylab="")
-plot(japFebAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
-     xlim = c(0, xmax), ylim = ylim_fixed,
-     main = "A. Japonicum (Feb)", xlab="", ylab="")
+      xlab="Number of stomachs", ylab="", cex.lab = 1.4)
+text(1, 3.9, "May 2016", cex=1.4, font=2, adj=0)
 plot(japMayAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
      xlim = c(0, xmax), ylim = ylim_fixed,
-     main = "A. Japonicum (May)", xlab="", ylab="")
-plot(allAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
+      xlab="Number of stomachs", ylab="", cex.lab = 1.4)
+text(1, 3.9, "May 2016", cex=1.4, font=2, adj=0)
+plot(hanFebAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
      xlim = c(0, xmax), ylim = ylim_fixed,
-     main = "All Acropoma", xlab="", ylab="")
+      xlab="Number of stomachs", ylab="", cex.lab = 1.4)
+text(1, 3.9, "Feb 2019", cex=1.4, font=2, adj=0)
+plot(japFebAccum, ci.type="poly", ci.col="lightblue", ci.lty=0, col="blue", lwd=2,
+     xlim = c(0, xmax), ylim = ylim_fixed,
+      xlab="Number of stomachs", ylab="", cex.lab = 1.4)
+text(1, 3.9, "Feb 2019", cex=1.4, font=2, adj=0)
 
 # axis labels
-mtext("Number of stomachs examined", side = 1, outer = TRUE, line = 2)
 mtext("Cumulative prey categories", side = 2, outer = TRUE, line = 2)
-mtext("Species Accumulation Curves",
-      outer = TRUE, cex = 1, line = 0, font = 2)
-
+mtext(expression(italic(paste("Acropoma hanedai"))),
+      side = 3, outer = TRUE, line = 0, at = 0.25, cex = 1.2, font = 3)
+mtext(expression(italic(paste("Acropoma japonicum"))),
+      side = 3, outer = TRUE, line = 0, at = 0.75, cex = 1.2, font = 3)
 
 dev.off()
 
